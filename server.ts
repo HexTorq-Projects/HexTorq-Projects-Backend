@@ -1,0 +1,31 @@
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+
+import categories from "./routes/categories";
+import projects from "./routes/projects";
+import applicationAreas from "./routes/applicationAreas";
+import stats from "./routes/stats";
+import auth from "./routes/auth";
+import enquiries from "./routes/enquiries";
+import wishlist from "./routes/wishlist";
+
+const app = express();
+
+// CORS: comma-separated allow-list from env; "*" = allow any (dev only).
+const origins = (process.env.CORS_ORIGIN ?? "*").split(",").map((s) => s.trim());
+app.use(cors({ origin: origins.includes("*") ? true : origins, credentials: true }));
+app.use(express.json());
+
+app.get("/health", (_req, res) => res.json({ ok: true }));
+
+app.use("/categories", categories);
+app.use("/application-areas", applicationAreas);
+app.use("/stats", stats);
+app.use("/projects", projects);
+app.use("/auth", auth);
+app.use("/enquiries", enquiries);
+app.use("/wishlist", wishlist);
+
+const PORT = Number(process.env.PORT ?? 4001);
+app.listen(PORT, () => console.log(`API running on http://localhost:${PORT}`));
