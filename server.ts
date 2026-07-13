@@ -13,9 +13,10 @@ import wishlist from "./routes/wishlist";
 const app = express();
 
 // CORS: comma-separated allow-list from env; if the list contains "*", allow all origins.
+const cleanOrigin = (origin: string) => origin.trim().replace(/^['"]|['"]$/g, "");
 const allowedOrigins = (process.env.CORS_ORIGIN ?? "*")
   .split(",")
-  .map((origin) => origin.trim())
+  .map(cleanOrigin)
   .filter(Boolean);
 const allowAllOrigins = allowedOrigins.includes("*");
 
