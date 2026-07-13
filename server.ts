@@ -12,9 +12,26 @@ import wishlist from "./routes/wishlist";
 
 const app = express();
 
-// CORS: comma-separated allow-list from env; "*" = allow any (dev only).
-const origins = (process.env.CORS_ORIGIN ?? "*").split(",").map((s) => s.trim());
-app.use(cors({ origin: origins.includes("*") ? true : origins, credentials: true }));
+// CORS: comma-separated allow-list from env; if the list contains "*", allow all origins.
+const allowedOrigins = (process.env.CORS_ORIGIN ?? "*")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const allowAllOrigins = allowedOrigins.includes("*");
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (allowAllOrigins || !origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`CORS origin not allowed: ${origin}`));
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
