@@ -3,6 +3,7 @@ import { z } from "zod";
 import prisma from "../lib/prisma";
 import { optionalAuth } from "../middleware/optionalAuth";
 import { requireAuth, type AuthedRequest } from "../middleware/requireAuth";
+import { sendEmail, enquiryAdminNotification, enquiryUserConfirmation } from "../lib/email";
 
 const router = Router();
 
@@ -14,6 +15,8 @@ const enquirySchema = z.object({
   projectId: z.string().uuid().optional(),
 });
 
+const ADMIN_EMAIL = process.env.SMTP_USER || "";
+
 // POST /enquiries  (guests allowed; auto-links userId when logged in)
 router.post("/", optionalAuth, async (req, res) => {
   const parsed = enquirySchema.safeParse(req.body);
@@ -23,9 +26,11 @@ router.post("/", optionalAuth, async (req, res) => {
   const { name, email, phone, message, projectId } = parsed.data;
   const userId = (req as AuthedRequest).userId ?? null;
 
+  let projectInfo = "General enquiry (no specific project)";
   if (projectId) {
-    const exists = await prisma.project.findUnique({ where: { id: projectId }, select: { id: true } });
-    if (!exists) return res.status(400).json({ error: "Unknown projectId" });
+    const project = await prisma.project.findUnique({ where: { id: projectId }, select: { id: true, projectTitle: true } });
+    if (!project) return res.status(400).json({ error: "Unknown projectId" });
+    projectInfo = `${project.projectTitle} (${project.id})`;
   }
 
   const actor = userId ?? "guest";
@@ -43,6 +48,15 @@ router.post("/", optionalAuth, async (req, res) => {
     },
     select: { id: true, status: true, rowCreatedTime: true },
   });
+
+  // Send notification to Hextorq team (non-blocking)
+  if (ADMIN_EMAIL) {
+    sendEmail(ADMIN_EMAIL, `New Enquiry from ${name}`, enquiryAdminNotification(name, email, phone, message, projectInfo)).catch(console.error);
+  }
+
+  // Send confirmation to the user (non-blocking)
+  sendEmail(email, "We received your enquiry — Hextorq", enquiryUserConfirmation(name, message)).catch(console.error);
+
   res.status(201).json(enquiry);
 });
 
