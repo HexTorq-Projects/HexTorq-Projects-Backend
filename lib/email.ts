@@ -16,28 +16,46 @@ const rawUrl = (process.env.FRONTEND_URL || "").trim();
 const _finalUrl = rawUrl && !rawUrl.includes("localhost") ? rawUrl : "";
 const BASE_URL = (_finalUrl || "https://projects.hextorq.tech").replace(/\/+$/, "");
 
+/* ------------------------------------------------------------------ */
+/*  Premium email design system                                       */
+/*  Dark theme default · Light mode via prefers-color-scheme          */
+/*  Animations: gradient-sweep, float, pulse — Apple Mail / iOS /     */
+/*  Samsung Mail / modern Gmail Android.                              */
+/* ------------------------------------------------------------------ */
+
 const S = {
-  body: "font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0c14;color:#e8ecf4;margin:0;padding:0;",
-  wrap: "max-width:580px;margin:0 auto;padding:28px 16px;",
-  card: "background:linear-gradient(180deg,#14182a 0%,#101424 100%);border-radius:20px;border:1px solid #1e2340;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4);",
-  header: "background:linear-gradient(135deg,#6d5bd0 0%,#4f46e5 50%,#0e7aa0 100%);padding:36px 32px 32px;text-align:center;position:relative;overflow:hidden;",
-  headerGlow: "position:absolute;top:-40%;right:-20%;width:200px;height:200px;background:radial-gradient(circle,rgba(255,255,255,0.1) 0%,transparent 70%);border-radius:50%;pointer-events:none;",
-  logo: "font-family:'Space Grotesk',system-ui,sans-serif;font-size:26px;font-weight:700;color:#fff;letter-spacing:-0.03em;position:relative;z-index:1;",
-  tagline: "font-size:13px;color:rgba(255,255,255,0.65);margin-top:6px;position:relative;z-index:1;",
-  content: "padding:32px 32px 28px;",
-  h2: "font-family:'Space Grotesk',system-ui,sans-serif;font-size:20px;font-weight:600;color:#e8ecf4;margin:0 0 6px;letter-spacing:-0.02em;",
-  p: "font-size:14px;color:#8b95b8;line-height:1.7;margin:0 0 16px;",
-  highlight: "background:linear-gradient(135deg,rgba(109,91,208,0.08) 0%,rgba(14,122,160,0.08) 100%);border:1px solid rgba(109,91,208,0.15);border-radius:12px;padding:18px 20px;margin:18px 0;",
-  highlightText: "font-size:13px;color:#a7b7e7;margin:0;line-height:1.7;",
-  cta: "display:inline-block;background:linear-gradient(100deg,#6d5bd0,#4f46e5 45%,#0e7aa0);color:#fff;text-decoration:none;padding:14px 34px;border-radius:12px;font-size:14px;font-weight:600;text-align:center;box-shadow:0 4px 20px rgba(109,91,208,0.3);",
-  ctaHover: "box-shadow:0 6px 28px rgba(109,91,208,0.45);transform:translateY(-1px);",
-  footer: "padding:20px 32px 28px;border-top:1px solid #1e2340;text-align:center;",
-  footerText: "font-size:12px;color:#4a5173;margin:3px 0;line-height:1.6;",
-  divider: "height:1px;background:linear-gradient(to right,transparent,#1e2340,transparent);border:none;margin:20px 0;",
-  badge: "display:inline-block;background:rgba(109,91,208,0.15);border:1px solid rgba(109,91,208,0.25);border-radius:20px;padding:4px 14px;font-size:11px;font-weight:600;color:#a7b7e7;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px;",
-  statBox: "background:rgba(255,255,255,0.03);border:1px solid #1e2340;border-radius:12px;padding:16px;text-align:center;",
-  statValue: "font-size:22px;font-weight:700;color:#e8ecf4;font-family:'Space Grotesk',system-ui,sans-serif;",
-  statLabel: "font-size:11px;color:#4a5173;text-transform:uppercase;letter-spacing:0.5px;margin-top:4px;",
+  body: "margin:0;padding:0;background:#080b14;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;",
+  wrap: "max-width:560px;margin:0 auto;padding:24px 12px;",
+  card: "background:#101428;border-radius:18px;border:1px solid #1e2440;overflow:hidden;",
+
+  header: "padding:28px 28px 22px;text-align:center;position:relative;overflow:hidden;",
+  headerBg: "background:linear-gradient(135deg,#6d5bd0 0%,#4f46e5 50%,#0e7aa0 100%);",
+  headerOverlay: "position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse 120% 80% at 50% -20%,rgba(255,255,255,0.08) 0%,transparent 70%);pointer-events:none;",
+  headerShine: "position:absolute;top:0;left:-60%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);pointer-events:none;",
+
+  logoWrap: "display:inline-flex;align-items:center;gap:8px;position:relative;z-index:1;",
+  logoIcon: "width:32px;height:32px;background:rgba(255,255,255,0.15);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;line-height:1;",
+  logoText: "font-family:'Space Grotesk',system-ui,sans-serif;font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.03em;",
+  tagline: "font-size:12px;color:rgba(255,255,255,0.55);margin:4px 0 0;position:relative;z-index:1;letter-spacing:0.2px;",
+
+  content: "padding:28px 28px 12px;",
+  emoji: "font-size:40px;line-height:1;display:block;text-align:center;margin-bottom:6px;",
+  h2: "font-family:'Space Grotesk',system-ui,sans-serif;font-size:19px;font-weight:600;color:#eef2fa;margin:0 0 4px;letter-spacing:-0.02em;",
+  p: "font-size:14px;color:#8892b8;line-height:1.7;margin:0 0 14px;",
+  strong: "color:#eef2fa;font-weight:600;",
+
+  highlight: "background:linear-gradient(135deg,rgba(109,91,208,0.06),rgba(14,122,160,0.06));border:1px solid rgba(109,91,208,0.12);border-radius:10px;padding:16px 18px;margin:14px 0;",
+  highlightText: "font-size:13px;color:#9db0e8;margin:0;line-height:1.7;",
+
+  cta: "display:inline-block;background:linear-gradient(100deg,#6d5bd0,#4f46e5 50%,#0e7aa0);color:#fff;text-decoration:none;padding:13px 32px;border-radius:10px;font-size:14px;font-weight:600;text-align:center;box-shadow:0 4px 16px rgba(109,91,208,0.25);",
+
+  footer: "padding:16px 28px 22px;border-top:1px solid #1e2440;text-align:center;",
+  footerText: "font-size:11px;color:#3c4268;margin:2px 0;line-height:1.6;",
+  divider: "height:1px;background:linear-gradient(90deg,transparent,#1e2440,transparent);border:none;margin:16px 0;",
+
+  tableRow: "border-bottom:1px solid #1a1f38;",
+  tableLabel: "padding:8px 12px;background:rgba(109,91,208,0.04);color:#8892b8;font-size:12px;font-weight:600;width:90px;vertical-align:top;",
+  tableValue: "padding:8px 12px;color:#eef2fa;font-size:13px;",
 };
 
 function wrap(html: string) {
@@ -45,8 +63,45 @@ function wrap(html: string) {
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <style>
-  @media(max-width:480px){.wrap{padding:16px 8px!important}.content{padding:24px 20px 20px!important}.header{padding:28px 20px 24px!important}.footer{padding:16px 20px 24px!important}h2{font-size:18px!important}}
-  @media(prefers-color-scheme:light){body{background:#f2f4fc!important}.card{background:linear-gradient(180deg,#ffffff 0%,#f8f9ff 100%)!important;border-color:#d3d6e8!important}h2{color:#141829!important}p{color:#3a4160!important}.highlight{background:linear-gradient(135deg,rgba(109,91,208,0.04) 0%,rgba(14,122,160,0.04) 100%)!important;border-color:rgba(109,91,208,0.1)!important}.highlightText{color:#4c63b6!important}.footer{border-color:#d3d6e8!important}.footerText{color:#5b6386!important}.statBox{background:rgba(0,0,0,0.02)!important;border-color:#d3d6e8!important}.statValue{color:#141829!important}.statLabel{color:#5b6386!important}.badge{background:rgba(76,99,182,0.08)!important;border-color:rgba(76,99,182,0.15)!important;color:#4c63b6!important}}
+  @media(max-width:480px){
+    .wrap{padding:12px 6px!important}
+    .content{padding:20px 18px 8px!important}
+    .header{padding:22px 18px 18px!important}
+    .footer{padding:12px 18px 18px!important}
+    h2{font-size:17px!important}
+    p{font-size:13px!important}
+  }
+
+  /* ── gradient sweep animation ── */
+  @keyframes sweep{0%{left:-60%}100%{left:120%}}
+  .header-shine{animation:sweep 4s ease-in-out infinite}
+
+  /* ── subtle float on CTA ── */
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+  .cta-btn{animation:float 3s ease-in-out infinite;display:inline-block}
+
+  /* ── fade-in entrance ── */
+  @keyframes fadeUp{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
+  .fade-in{animation:fadeUp 0.6s ease-out both}
+  .fade-in-d1{animation-delay:0.1s}
+  .fade-in-d2{animation-delay:0.2s}
+  .fade-in-d3{animation-delay:0.3s}
+
+  /* ── light mode ── */
+  @media(prefers-color-scheme:light){
+    body{background:#f0f2fa!important}
+    .card{background:#ffffff!important;border-color:#d0d4e8!important}
+    h2{color:#12162a!important}
+    p{color:#383f62!important}
+    .strong{color:#12162a!important}
+    .highlight{background:linear-gradient(135deg,rgba(109,91,208,0.03),rgba(14,122,160,0.03))!important;border-color:rgba(109,91,208,0.08)!important}
+    .highlightText{color:#4c63b6!important}
+    .footer{border-color:#d0d4e8!important}
+    .footerText{color:#5a6184!important}
+    .tableLabel{color:#383f62!important;background:rgba(109,91,208,0.02)!important}
+    .tableValue{color:#12162a!important}
+    .tableRow{border-color:#e0e3f2!important}
+  }
 </style>
 </head>
 <body style="${S.body}">
@@ -55,9 +110,9 @@ function wrap(html: string) {
       ${html}
       <div class="footer" style="${S.footer}">
         <p style="${S.footerText}">Hextorq — Academic Project Marketplace</p>
-        <p style="${S.footerText}">Need help? Reply to this email or WhatsApp us</p>
-        <hr style="${S.divider}" />
-        <p style="${S.footerText};font-size:11px;color:#383d5c">You received this because you have an account with Hextorq.</p>
+        <p style="${S.footerText}">Need help? Reply or WhatsApp us</p>
+        <hr class="divider" style="${S.divider}" />
+        <p style="${S.footerText};color:#2a2f50">You received this as a Hextorq account holder.</p>
       </div>
     </div>
   </div>
@@ -65,220 +120,184 @@ function wrap(html: string) {
 </html>`;
 }
 
+function header(logoEmoji: string, tagline: string) {
+  return `
+    <div class="header fade-in" style="${S.headerBg + S.header}">
+      <div style="${S.headerOverlay}"></div>
+      <div class="header-shine" style="${S.headerShine}"></div>
+      <div style="${S.logoWrap}">
+        <span style="${S.logoIcon}">${logoEmoji}</span>
+        <span style="${S.logoText}">Hextorq</span>
+      </div>
+      <p style="${S.tagline}">${tagline}</p>
+    </div>`;
+}
+
+/* ──────────────────────────────────────────── */
+/*  TEMPLATES                                   */
+/* ──────────────────────────────────────────── */
+
 export function welcomeEmail(name: string) {
   return wrap(`
-    <div class="header" style="${S.header}">
-      <div style="${S.headerGlow}"></div>
-      <div style="${S.logo}">Hextorq</div>
-      <p style="${S.tagline}">Your final-year project journey starts today</p>
-    </div>
-    <div class="content" style="${S.content}">
-      <div style="text-align:center">
-        <div style="font-size:48px;margin-bottom:8px;line-height:1">🚀</div>
-      </div>
-      <h2 style="${S.h2}">Welcome aboard, ${name}!</h2>
+    ${header("🚀", "Your final-year project journey starts today")}
+    <div class="content fade-in fade-in-d1" style="${S.content}">
+      <span style="${S.emoji}">👋</span>
+      <h2 style="${S.h2}">Welcome, ${name}!</h2>
       <p style="${S.p}">
-        Your Hextorq student account is now active. You now have access to <strong style="color:#e8ecf4">3,800+ ready-to-build projects</strong> across 14+ academic streams.
+        Your Hextorq student account is active. Explore <strong class="strong" style="${S.strong}">3,800+ ready-to-build projects</strong> across 14+ academic streams.
       </p>
-      <div style="${S.highlight}">
-        <p style="${S.highlightText}">
-          <strong style="color:#e8ecf4;display:block;margin-bottom:8px">✨ Here's what you can do now:</strong>
-          • Browse projects by stream, tier &amp; complexity<br/>
-          • Save favourites to your personal wishlist<br/>
-          • Enquire &amp; get WhatsApp support from engineers<br/>
-          • Receive full codebase with setup &amp; viva coaching
+      <div class="highlight" style="${S.highlight}">
+        <p class="highlightText" style="${S.highlightText}">
+          <strong style="color:#eef2fa;display:block;margin-bottom:6px">✨ What you can do now:</strong>
+          • Browse by stream, tier &amp; complexity<br/>
+          • Save favourites to your wishlist<br/>
+          • Get WhatsApp support from engineers<br/>
+          • Full codebase + viva coaching
         </p>
       </div>
-      <div style="text-align:center;margin:24px 0">
-        <a href="${BASE_URL}/explore" style="${S.cta}">Browse 3,800+ Projects →</a>
+      <div style="text-align:center;margin:20px 0">
+        <a href="${BASE_URL}/explore" class="cta-btn" style="${S.cta}">Browse 3,800+ Projects →</a>
       </div>
-      <p style="${S.p}">
-        If you have any questions, simply reply to this email or reach out on WhatsApp. Our team is ready to help you graduate with distinction.
-      </p>
+      <p style="${S.p}">Questions? Reply to this email or WhatsApp us.</p>
       <p style="${S.p};margin-bottom:0">— The Hextorq Team</p>
-    </div>
-  `);
+    </div>`);
 }
 
 export function loginNotificationEmail(name: string) {
   return wrap(`
-    <div class="header" style="${S.header}">
-      <div style="${S.headerGlow}"></div>
-      <div style="${S.logo}">Hextorq</div>
-      <p style="${S.tagline}">Security alert</p>
-    </div>
-    <div class="content" style="${S.content}">
-      <div style="text-align:center">
-        <div style="font-size:48px;margin-bottom:8px;line-height:1">🔐</div>
-      </div>
+    ${header("🔐", "New sign-in alert")}
+    <div class="content fade-in fade-in-d1" style="${S.content}">
+      <span style="${S.emoji}">👤</span>
       <h2 style="${S.h2}">New sign-in detected</h2>
       <p style="${S.p}">
-        Hi <strong style="color:#e8ecf4">${name}</strong>, we noticed a new sign-in to your Hextorq account. If this was you, no action is needed.
+        Hi <strong class="strong" style="${S.strong}">${name}</strong>, we noticed a new sign-in to your Hextorq account. If this was you, no action needed.
       </p>
-      <div style="${S.highlight}">
-        <p style="${S.highlightText}">
-          <strong style="color:#e8ecf4;display:block;margin-bottom:6px">📍 Sign-in details</strong>
+      <div class="highlight" style="${S.highlight}">
+        <p class="highlightText" style="${S.highlightText}">
+          <strong style="color:#eef2fa;display:block;margin-bottom:4px">📍 Details</strong>
           Account: ${name}<br/>
           Time: ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST
         </p>
       </div>
       <p style="${S.p}">
-        Didn't recognise this sign-in? <a href="${BASE_URL}/forgot-password" style="color:#a7b7e7;text-decoration:underline">Reset your password</a> immediately.
+        Not you? <a href="${BASE_URL}/forgot-password" style="color:#9db0e8;text-decoration:underline">Reset your password</a> immediately.
       </p>
-      <div style="text-align:center;margin:20px 0">
-        <a href="${BASE_URL}/dashboard" style="${S.cta}">Go to Dashboard →</a>
+      <div style="text-align:center;margin:18px 0">
+        <a href="${BASE_URL}/dashboard" class="cta-btn" style="${S.cta}">Go to Dashboard →</a>
       </div>
       <p style="${S.p};margin-bottom:0">— The Hextorq Team</p>
-    </div>
-  `);
+    </div>`);
 }
 
 export function resetPasswordEmail(name: string, token: string) {
   const resetUrl = `${BASE_URL}/reset-password?token=${token}`;
   return wrap(`
-    <div class="header" style="${S.header}">
-      <div style="${S.headerGlow}"></div>
-      <div style="${S.logo}">Hextorq</div>
-      <p style="${S.tagline}">Password reset requested</p>
-    </div>
-    <div class="content" style="${S.content}">
-      <div style="text-align:center">
-        <div style="font-size:48px;margin-bottom:8px;line-height:1">🔑</div>
-      </div>
+    ${header("🔑", "Password reset requested")}
+    <div class="content fade-in fade-in-d1" style="${S.content}">
+      <span style="${S.emoji}">📧</span>
       <h2 style="${S.h2}">Reset your password</h2>
       <p style="${S.p}">
-        Hi <strong style="color:#e8ecf4">${name}</strong>, we received a request to reset your Hextorq password. Click below to set a new one. This link expires in <strong style="color:#e8ecf4">1 hour</strong>.
+        Hi <strong class="strong" style="${S.strong}">${name}</strong>, click below to set a new password. This link expires in <strong class="strong" style="${S.strong}">1 hour</strong>.
       </p>
-      <div style="text-align:center;margin:28px 0">
-        <a href="${resetUrl}" style="${S.cta}">Create New Password →</a>
+      <div style="text-align:center;margin:24px 0">
+        <a href="${resetUrl}" class="cta-btn" style="${S.cta}">Create New Password →</a>
       </div>
-      <div style="${S.highlight}">
-        <p style="${S.highlightText}">
-          <strong style="color:#e8ecf4;display:block;margin-bottom:4px">🔗 Direct link:</strong>
-          <span style="word-break:break-all;font-size:12px;color:#8b95b8">${resetUrl}</span>
+      <div class="highlight" style="${S.highlight}">
+        <p class="highlightText" style="${S.highlightText}">
+          <strong style="color:#eef2fa;display:block;margin-bottom:4px">🔗 Direct link:</strong>
+          <span style="word-break:break-all;font-size:12px;color:#8892b8">${resetUrl}</span>
         </p>
       </div>
-      <p style="${S.p}">
-        If you didn't request this, please ignore this email. Your password will remain unchanged.
-      </p>
+      <p style="${S.p}">Ignore this email if you didn't request a reset.</p>
       <p style="${S.p};margin-bottom:0">— The Hextorq Team</p>
-    </div>
-  `);
+    </div>`);
 }
 
 export function passwordResetConfirmationEmail(name: string) {
   return wrap(`
-    <div class="header" style="${S.header}">
-      <div style="${S.headerGlow}"></div>
-      <div style="${S.logo}">Hextorq</div>
-      <p style="${S.tagline}">Password updated</p>
-    </div>
-    <div class="content" style="${S.content}">
-      <div style="text-align:center">
-        <div style="font-size:48px;margin-bottom:8px;line-height:1">✅</div>
-      </div>
+    ${header("✅", "Password updated")}
+    <div class="content fade-in fade-in-d1" style="${S.content}">
+      <span style="${S.emoji}">🎉</span>
       <h2 style="${S.h2}">Password changed successfully</h2>
       <p style="${S.p}">
-        Hi <strong style="color:#e8ecf4">${name}</strong>, your Hextorq account password has been updated.
+        Hi <strong class="strong" style="${S.strong}">${name}</strong>, your Hextorq password has been updated.
       </p>
-      <p style="${S.p}">
-        If you made this change, you're all set. If not, please contact our support team immediately.
-      </p>
-      <div style="text-align:center;margin:24px 0">
-        <a href="${BASE_URL}/login" style="${S.cta}">Sign In →</a>
+      <p style="${S.p}">If this was you, you're all set. If not, contact support immediately.</p>
+      <div style="text-align:center;margin:20px 0">
+        <a href="${BASE_URL}/login" class="cta-btn" style="${S.cta}">Sign In →</a>
       </div>
       <p style="${S.p};margin-bottom:0">— The Hextorq Team</p>
-    </div>
-  `);
+    </div>`);
 }
 
 export function enquiryAdminNotification(name: string, email: string, phone: string | null, message: string, projectInfo: string) {
   return wrap(`
-    <div class="header" style="${S.header}">
-      <div style="${S.headerGlow}"></div>
-      <div style="${S.logo}">Hextorq</div>
-      <p style="${S.tagline}">New lead captured</p>
-    </div>
-    <div class="content" style="${S.content}">
-      <div style="text-align:center">
-        <div style="font-size:48px;margin-bottom:8px;line-height:1">📩</div>
-      </div>
+    ${header("📩", "New enquiry captured")}
+    <div class="content fade-in fade-in-d1" style="${S.content}">
+      <span style="${S.emoji}">📋</span>
       <h2 style="${S.h2}">New enquiry from ${name}</h2>
-      <p style="${S.p}">A user has submitted an enquiry on Hextorq. Details below:</p>
-      <table style="width:100%;border-collapse:collapse;margin:16px 0;border-radius:12px;overflow:hidden">
-        <tr>
-          <td style="padding:10px 14px;background:rgba(109,91,208,0.06);border-bottom:1px solid #1e2340;color:#8b95b8;font-size:13px;font-weight:600;width:100px">Name</td>
-          <td style="padding:10px 14px;border-bottom:1px solid #1e2340;color:#e8ecf4;font-size:13px">${name}</td>
+      <p style="${S.p}">Details received via the website contact form:</p>
+      <table style="width:100%;border-collapse:collapse;margin:12px 0;border-radius:10px;overflow:hidden">
+        <tr class="tableRow" style="${S.tableRow}">
+          <td class="tableLabel" style="${S.tableLabel}">Name</td>
+          <td class="tableValue" style="${S.tableValue}">${name}</td>
         </tr>
-        <tr>
-          <td style="padding:10px 14px;background:rgba(109,91,208,0.06);border-bottom:1px solid #1e2340;color:#8b95b8;font-size:13px;font-weight:600">Email</td>
-          <td style="padding:10px 14px;border-bottom:1px solid #1e2340;color:#e8ecf4;font-size:13px"><a href="mailto:${email}" style="color:#a7b7e7">${email}</a></td>
+        <tr class="tableRow" style="${S.tableRow}">
+          <td class="tableLabel" style="${S.tableLabel}">Email</td>
+          <td class="tableValue" style="${S.tableValue}"><a href="mailto:${email}" style="color:#9db0e8">${email}</a></td>
         </tr>
-        ${phone ? `<tr>
-          <td style="padding:10px 14px;background:rgba(109,91,208,0.06);border-bottom:1px solid #1e2340;color:#8b95b8;font-size:13px;font-weight:600">Phone</td>
-          <td style="padding:10px 14px;border-bottom:1px solid #1e2340;color:#e8ecf4;font-size:13px">${phone}</td>
+        ${phone ? `<tr class="tableRow" style="${S.tableRow}">
+          <td class="tableLabel" style="${S.tableLabel}">Phone</td>
+          <td class="tableValue" style="${S.tableValue}">${phone}</td>
         </tr>` : ""}
-        <tr>
-          <td style="padding:10px 14px;background:rgba(109,91,208,0.06);border-bottom:1px solid #1e2340;color:#8b95b8;font-size:13px;font-weight:600">Project</td>
-          <td style="padding:10px 14px;border-bottom:1px solid #1e2340;color:#e8ecf4;font-size:13px">${projectInfo}</td>
+        <tr class="tableRow" style="${S.tableRow}">
+          <td class="tableLabel" style="${S.tableLabel}">Project</td>
+          <td class="tableValue" style="${S.tableValue}">${projectInfo}</td>
         </tr>
         <tr>
-          <td style="padding:10px 14px;background:rgba(109,91,208,0.06);color:#8b95b8;font-size:13px;font-weight:600">Time</td>
-          <td style="padding:10px 14px;color:#e8ecf4;font-size:13px">${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST</td>
+          <td class="tableLabel" style="${S.tableLabel};border-bottom:none">Time</td>
+          <td class="tableValue" style="${S.tableValue};border-bottom:none">${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST</td>
         </tr>
       </table>
-      <div style="${S.highlight}">
-        <p style="${S.highlightText}"><strong style="color:#e8ecf4;display:block;margin-bottom:4px">Message:</strong>${message}</p>
+      <div class="highlight" style="${S.highlight}">
+        <p class="highlightText" style="${S.highlightText}"><strong style="color:#eef2fa;display:block;margin-bottom:4px">Message:</strong>${message}</p>
       </div>
-      <div style="text-align:center;margin:20px 0">
-        <a href="mailto:${email}" style="${S.cta}">Reply via Email →</a>
+      <div style="text-align:center;margin:18px 0">
+        <a href="mailto:${email}" class="cta-btn" style="${S.cta}">Reply via Email →</a>
       </div>
-    </div>
-  `);
+    </div>`);
 }
 
 export function enquiryUserConfirmation(name: string, message: string) {
   return wrap(`
-    <div class="header" style="${S.header}">
-      <div style="${S.headerGlow}"></div>
-      <div style="${S.logo}">Hextorq</div>
-      <p style="${S.tagline}">Enquiry received</p>
-    </div>
-    <div class="content" style="${S.content}">
-      <div style="text-align:center">
-        <div style="font-size:48px;margin-bottom:8px;line-height:1">🙌</div>
-      </div>
-      <h2 style="${S.h2}">Thanks for reaching out, ${name}!</h2>
+    ${header("🙌", "Enquiry received")}
+    <div class="content fade-in fade-in-d1" style="${S.content}">
+      <span style="${S.emoji}">📬</span>
+      <h2 style="${S.h2}">Thanks, ${name}!</h2>
       <p style="${S.p}">
-        We've received your enquiry and our team will review it shortly. Here's a copy of what you sent:
+        We've received your enquiry. Our team will review and reach out within <strong class="strong" style="${S.strong}">24 hours</strong>. Here's your submission:
       </p>
-      <div style="${S.highlight}">
-        <p style="${S.highlightText}"><strong style="color:#e8ecf4;display:block;margin-bottom:4px">Your message:</strong>${message}</p>
+      <div class="highlight" style="${S.highlight}">
+        <p class="highlightText" style="${S.highlightText}"><strong style="color:#eef2fa;display:block;margin-bottom:4px">Your message:</strong>${message}</p>
       </div>
-      <hr style="${S.divider}" />
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0">
-        <div style="${S.statBox}">
-          <div style="${S.statValue}">⏱</div>
-          <div style="${S.statLabel}">Response within 24h</div>
-        </div>
-        <div style="${S.statBox}">
-          <div style="${S.statValue}">📱</div>
-          <div style="${S.statLabel}">WhatsApp follow-up</div>
-        </div>
-      </div>
-      <p style="${S.p}">
-        <strong style="color:#e8ecf4">⏳ What happens next?</strong><br/>
-        Our project engineers will review your requirements and reach out within 24 hours via WhatsApp or email to discuss next steps.
-      </p>
-      <p style="${S.p}">
-        In the meantime, browse more projects or contact us on WhatsApp for faster support.
-      </p>
-      <div style="text-align:center;margin:24px 0">
-        <a href="${BASE_URL}/explore" style="${S.cta}">Browse More Projects →</a>
+      <table style="width:100%;border-collapse:collapse;margin:14px 0">
+        <tr>
+          <td style="width:50%;padding:10px;text-align:center;background:rgba(255,255,255,0.02);border:1px solid #1e2440;border-radius:10px 0 0 10px">
+            <div style="font-size:22px;font-weight:700;color:#eef2fa;font-family:'Space Grotesk',sans-serif">⏱</div>
+            <div style="font-size:10px;color:#3c4268;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px">Response in 24h</div>
+          </td>
+          <td style="width:50%;padding:10px;text-align:center;background:rgba(255,255,255,0.02);border:1px solid #1e2440;border-left:none;border-radius:0 10px 10px 0">
+            <div style="font-size:22px;font-weight:700;color:#eef2fa;font-family:'Space Grotesk',sans-serif">📱</div>
+            <div style="font-size:10px;color:#3c4268;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px">WhatsApp follow-up</div>
+          </td>
+        </tr>
+      </table>
+      <p style="${S.p}">In the meantime, browse more projects or WhatsApp us for faster support.</p>
+      <div style="text-align:center;margin:18px 0">
+        <a href="${BASE_URL}/explore" class="cta-btn" style="${S.cta}">Browse Projects →</a>
       </div>
       <p style="${S.p};margin-bottom:0">— The Hextorq Team</p>
-    </div>
-  `);
+    </div>`);
 }
 
 export async function sendEmail(to: string, subject: string, html: string) {
