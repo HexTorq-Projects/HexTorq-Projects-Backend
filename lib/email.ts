@@ -12,7 +12,9 @@ const transporter = nodemailer.createTransport({
 });
 
 const FROM = `"Hextorq" <${process.env.SMTP_FROM ?? process.env.SMTP_USER}>`;
-const BASE_URL = (process.env.FRONTEND_URL || "https://projects.hextorq.tech").replace(/\/+$/, "");
+const rawUrl = (process.env.FRONTEND_URL || "").trim();
+const _finalUrl = rawUrl && !rawUrl.includes("localhost") ? rawUrl : "";
+const BASE_URL = (_finalUrl || "https://projects.hextorq.tech").replace(/\/+$/, "");
 
 const STYLES = {
   body: "font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b0c15;color:#f0f2fa;margin:0;padding:0",
