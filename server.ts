@@ -8,6 +8,7 @@ import applicationAreas from "./routes/applicationAreas";
 import stats from "./routes/stats";
 import auth from "./routes/auth";
 import enquiries from "./routes/enquiries";
+import mail from "./routes/mail";
 import wishlist from "./routes/wishlist";
 
 const app = express();
@@ -43,6 +44,7 @@ app.use("/stats", stats);
 app.use("/projects", projects);
 app.use("/auth", auth);
 app.use("/enquiries", enquiries);
+app.use("/mail", mail);
 app.use("/wishlist", wishlist);
 
 const PORT = Number(process.env.PORT ?? 4001);
