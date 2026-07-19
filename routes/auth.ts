@@ -1,12 +1,18 @@
 import { Router } from "express";
 import { z } from "zod";
+import crypto from "crypto";
 import prisma from "../lib/prisma";
 import { hashPassword, comparePassword } from "../lib/hash";
 import { signToken } from "../lib/jwt";
 import { requireAuth, type AuthedRequest } from "../middleware/requireAuth";
 import { isGoogleConfigured, verifyGoogleToken } from "../lib/googleAuth";
-import { generateResetToken, hashResetToken } from "../lib/resetToken";
-import { sendMail } from "../lib/mailer";
+import {
+  sendEmail,
+  welcomeEmail,
+  loginNotificationEmail,
+  resetPasswordEmail,
+  passwordResetConfirmationEmail,
+} from "../lib/email";
 
 const router = Router();
 
@@ -31,9 +37,8 @@ const forgotPasswordSchema = z.object({
 });
 
 const resetPasswordSchema = z.object({
-  email: z.string().email(),
   token: z.string().min(1),
-  newPassword: z.string().min(6).max(200),
+  password: z.string().min(6).max(200),
 });
 
 const publicUser = (u: { id: string; name: string; email: string; phone: string | null }) => ({
@@ -65,6 +70,9 @@ router.post("/register", async (req, res) => {
     },
   });
 
+  // Send welcome email (non-blocking)
+  sendEmail(email, "Welcome to Hextorq! 🚀", welcomeEmail(name)).catch(console.error);
+
   const token = signToken({ userId: user.id, email: user.email });
   res.status(201).json({ token, user: publicUser(user) });
 });
@@ -87,6 +95,9 @@ router.post("/login", async (req, res) => {
 
   const ok = await comparePassword(password, user.passwordHash);
   if (!ok) return res.status(401).json({ error: "Invalid credentials" });
+
+  // Send login notification email (non-blocking)
+  sendEmail(email, "New Sign-In to Your Hextorq Account 🔐", loginNotificationEmail(user.name)).catch(console.error);
 
   const token = signToken({ userId: user.id, email: user.email });
   res.json({ token, user: publicUser(user) });
@@ -115,6 +126,7 @@ router.post("/google", async (req, res) => {
   const { sub: googleId, email, name } = payload;
 
   let user = await prisma.user.findUnique({ where: { googleId } });
+  let isNewUser = false;
 
   if (!user) {
     const existingByEmail = await prisma.user.findUnique({ where: { email } });
@@ -133,78 +145,19 @@ router.post("/google", async (req, res) => {
           rowUpdatedUser: "google-signup",
         },
       });
+      isNewUser = true;
     }
+  }
+
+  // Send welcome/login-notification email (non-blocking), matching the password-based flows
+  if (isNewUser) {
+    sendEmail(email, "Welcome to Hextorq! 🚀", welcomeEmail(user.name)).catch(console.error);
+  } else {
+    sendEmail(email, "New Sign-In to Your Hextorq Account 🔐", loginNotificationEmail(user.name)).catch(console.error);
   }
 
   const token = signToken({ userId: user.id, email: user.email });
   res.json({ token, user: publicUser(user) });
-});
-
-// POST /auth/forgot-password
-router.post("/forgot-password", async (req, res) => {
-  const parsed = forgotPasswordSchema.safeParse(req.body);
-  if (!parsed.success)
-    return res.status(400).json({ error: "Validation failed", details: parsed.error.issues });
-
-  const { email } = parsed.data;
-  const genericResponse = { message: "If that email exists, a reset link has been sent." };
-
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) return res.json(genericResponse);
-
-  const token = generateResetToken();
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      resetToken: hashResetToken(token),
-      resetTokenExpires: new Date(Date.now() + 60 * 60 * 1000),
-      rowUpdatedUser: "forgot-password",
-    },
-  });
-
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
-  try {
-    await sendMail({
-      to: email,
-      subject: "Reset your HexTorq Projects password",
-      html: `<p>Click the link below to set your password. This link expires in 1 hour.</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
-      text: `Reset your password: ${resetUrl}`,
-    });
-  } catch (err) {
-    console.error("Failed to send password reset email:", err);
-  }
-
-  res.json(genericResponse);
-});
-
-// POST /auth/reset-password
-router.post("/reset-password", async (req, res) => {
-  const parsed = resetPasswordSchema.safeParse(req.body);
-  if (!parsed.success)
-    return res.status(400).json({ error: "Validation failed", details: parsed.error.issues });
-
-  const { email, token, newPassword } = parsed.data;
-  const user = await prisma.user.findUnique({ where: { email } });
-
-  const invalid = () => res.status(400).json({ error: "Invalid or expired reset link" });
-
-  if (!user || !user.resetToken || !user.resetTokenExpires) return invalid();
-  if (user.resetTokenExpires < new Date()) return invalid();
-  if (user.resetToken !== hashResetToken(token)) return invalid();
-
-  const passwordHash = await hashPassword(newPassword);
-  const updated = await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      passwordHash,
-      resetToken: null,
-      resetTokenExpires: null,
-      rowUpdatedUser: "reset-password",
-    },
-  });
-
-  const authToken = signToken({ userId: updated.id, email: updated.email });
-  res.json({ token: authToken, user: publicUser(updated) });
 });
 
 // GET /auth/me
@@ -216,6 +169,81 @@ router.get("/me", requireAuth, async (req, res) => {
   });
   if (!user) return res.status(404).json({ error: "User not found" });
   res.json(user);
+});
+
+// POST /auth/forgot-password
+router.post("/forgot-password", async (req, res) => {
+  const parsed = forgotPasswordSchema.safeParse(req.body);
+  if (!parsed.success)
+    return res.status(400).json({ error: "Validation failed", details: parsed.error.issues });
+
+  const { email } = parsed.data;
+
+  // Always return success to prevent email enumeration
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return res.json({ ok: true });
+
+  // Invalidate any existing unused tokens for this user
+  await prisma.passwordResetToken.updateMany({
+    where: { userId: user.id, used: false, expiresAt: { gte: new Date() } },
+    data: { used: true, rowUpdatedUser: "system" },
+  });
+
+  // Create a new reset token (expires in 1 hour)
+  const token = crypto.randomBytes(32).toString("hex");
+  await prisma.passwordResetToken.create({
+    data: {
+      token,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      rowCreatedUser: "system",
+      rowUpdatedUser: "system",
+    },
+  });
+
+  // Send reset email (non-blocking)
+  sendEmail(email, "Reset Your Hextorq Password 🔑", resetPasswordEmail(user.name, token)).catch(console.error);
+
+  res.json({ ok: true });
+});
+
+// POST /auth/reset-password
+router.post("/reset-password", async (req, res) => {
+  const parsed = resetPasswordSchema.safeParse(req.body);
+  if (!parsed.success)
+    return res.status(400).json({ error: "Validation failed", details: parsed.error.issues });
+
+  const { token, password } = parsed.data;
+
+  const resetToken = await prisma.passwordResetToken.findUnique({
+    where: { token },
+    include: { user: true },
+  });
+
+  if (!resetToken) return res.status(400).json({ error: "Invalid or expired reset token" });
+  if (resetToken.used) return res.status(400).json({ error: "Reset token has already been used" });
+  if (resetToken.expiresAt < new Date()) return res.status(400).json({ error: "Reset token has expired" });
+
+  const passwordHash = await hashPassword(password);
+
+  const [updatedUser] = await prisma.$transaction([
+    prisma.user.update({
+      where: { id: resetToken.userId },
+      data: { passwordHash, rowUpdatedUser: "password-reset" },
+    }),
+    prisma.passwordResetToken.update({
+      where: { id: resetToken.id },
+      data: { used: true, rowUpdatedUser: "system" },
+    }),
+  ]);
+
+  // Send confirmation email (non-blocking)
+  sendEmail(resetToken.user.email, "Your Hextorq Password Has Been Changed ✅", passwordResetConfirmationEmail(resetToken.user.name)).catch(
+    console.error
+  );
+
+  const authToken = signToken({ userId: updatedUser.id, email: updatedUser.email });
+  res.json({ token: authToken, user: publicUser(updatedUser) });
 });
 
 export default router;

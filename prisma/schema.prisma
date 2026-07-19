@@ -115,14 +115,13 @@ model User {
   email             String   @unique
   passwordHash      String?  @map("password_hash")
   googleId          String?  @unique @map("google_id")
-  resetToken        String?  @map("reset_token")
-  resetTokenExpires DateTime? @map("reset_token_expires")
   name              String
   phone             String?
 
   enquiries      Enquiry[]
   wishlist       Wishlist[]
   orders         Order[]
+  resetTokens    PasswordResetToken[]
 
   rowCreatedUser String   @default("system") @map("row_created_user")
   rowCreatedTime DateTime @default(now()) @map("row_created_time")
@@ -160,6 +159,25 @@ model Enquiry {
   @@index([projectId])
   @@index([status])
   @@map("enquiry")
+}
+
+// ---------- PASSWORD RESET TOKEN ----------
+model PasswordResetToken {
+  id        String   @id @default(uuid()) @map("reset_token_id")
+  token     String   @unique @map("token")
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false) @map("used")
+
+  rowCreatedUser String   @default("system") @map("row_created_user")
+  rowCreatedTime DateTime @default(now()) @map("row_created_time")
+  rowUpdatedUser String   @default("system") @map("row_updated_user")
+  rowUpdatedTime DateTime @updatedAt @map("row_updated_time")
+
+  @@index([token])
+  @@index([userId])
+  @@map("password_reset_token")
 }
 
 // ---------- WISHLIST (saved projects per user) ----------

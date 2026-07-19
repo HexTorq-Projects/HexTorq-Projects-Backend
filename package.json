@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "scripts": {
     "import": "tsx import.ts",
-    "start": "tsx server.ts",
+    "start": "prisma migrate deploy && tsx server.ts",
     "dev": "tsx watch server.ts",
     "studio": "prisma studio",
     "migrate": "prisma migrate dev",
     "postinstall": "prisma generate",
+    "migrate:deploy": "prisma migrate deploy",
     "seed": "tsx prisma/seed.ts",
     "verify": "tsx scripts/verify-prisma.ts"
   },

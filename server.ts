@@ -52,4 +52,6 @@ app.use("/wishlist", wishlist);
 app.use("/admin", admin);
 
 const PORT = Number(process.env.PORT ?? 4001);
+const frontendUrl = (process.env.FRONTEND_URL || "https://projects.hextorq.tech").replace(/\/+$/, "");
+console.log(`FRONTEND_URL resolved to: ${frontendUrl}`);
 app.listen(PORT, () => console.log(`API running on http://localhost:${PORT}`));
