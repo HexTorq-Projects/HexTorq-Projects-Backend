@@ -1,5 +1,28 @@
 import { Router, Request, Response } from "express";
 import prisma from "../lib/prisma";
+import { getActiveOffers, bestOffer, effectivePrice, advanceAmountFor } from "../lib/offers";
+
+function applyOffers<T extends { id: string; categoryId: string; subCategoryId: string | null; recommendedPrice: number | null; originalPrice: number | null; discountedPrice: number | null }>(
+  project: T,
+  offers: Awaited<ReturnType<typeof getActiveOffers>>
+): T & { activeOffer: ReturnType<typeof buildActiveOfferInfo> } {
+  const offer = bestOffer(project, offers);
+  const discountedPrice = effectivePrice(project, offer?.discountPercent ?? 0);
+  return { ...project, discountedPrice, activeOffer: buildActiveOfferInfo(offer, discountedPrice) };
+}
+
+function buildActiveOfferInfo(offer: Awaited<ReturnType<typeof getActiveOffers>>[number] | null, price: number) {
+  if (!offer) return null;
+  return {
+    id: offer.id,
+    name: offer.name,
+    discountPercent: offer.discountPercent,
+    endsAt: offer.endsAt,
+    advanceType: offer.advanceType,
+    advanceValue: offer.advanceValue,
+    advanceAmount: advanceAmountFor(price, offer),
+  };
+}
 
 const router = Router();
 const PER_PAGE = 20;
@@ -50,7 +73,7 @@ router.get("/", async (req: Request, res: Response) => {
 
   const limit = req.query.perPage ? Math.min(10000, Number(req.query.perPage)) : PER_PAGE;
 
-  const [items, total] = await Promise.all([
+  const [items, total, offers] = await Promise.all([
     prisma.project.findMany({
       where,
       include: { category: true, subCategory: true, applicationArea: true },
@@ -59,19 +82,25 @@ router.get("/", async (req: Request, res: Response) => {
       orderBy,
     }),
     prisma.project.count({ where }),
+    getActiveOffers(),
   ]);
 
-  res.json({ items, total, page, perPage: limit, pages: Math.ceil(total / limit) });
+  const pricedItems = items.map((project) => applyOffers(project, offers));
+
+  res.json({ items: pricedItems, total, page, perPage: limit, pages: Math.ceil(total / limit) });
 });
 
-// GET /projects/:id  (unchanged)
+// GET /projects/:id
 router.get("/:id", async (req: Request, res: Response) => {
-  const project = await prisma.project.findUnique({
-    where: { id: String(req.params.id) },
-    include: { category: true, subCategory: true, applicationArea: true },
-  });
+  const [project, offers] = await Promise.all([
+    prisma.project.findUnique({
+      where: { id: String(req.params.id) },
+      include: { category: true, subCategory: true, applicationArea: true },
+    }),
+    getActiveOffers(),
+  ]);
   if (!project) return res.status(404).json({ error: "Project not found" });
-  res.json(project);
+  res.json(applyOffers(project, offers));
 });
 
 export default router;

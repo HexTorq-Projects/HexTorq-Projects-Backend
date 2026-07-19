@@ -9,7 +9,9 @@ import stats from "./routes/stats";
 import auth from "./routes/auth";
 import enquiries from "./routes/enquiries";
 import mail from "./routes/mail";
+import orders from "./routes/orders";
 import wishlist from "./routes/wishlist";
+import admin from "./routes/admin";
 
 const app = express();
 
@@ -45,7 +47,9 @@ app.use("/projects", projects);
 app.use("/auth", auth);
 app.use("/enquiries", enquiries);
 app.use("/mail", mail);
+app.use("/orders", orders);
 app.use("/wishlist", wishlist);
+app.use("/admin", admin);
 
 const PORT = Number(process.env.PORT ?? 4001);
 app.listen(PORT, () => console.log(`API running on http://localhost:${PORT}`));
