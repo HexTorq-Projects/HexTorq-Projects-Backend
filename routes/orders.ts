@@ -198,19 +198,25 @@ router.post("/checkout", async (req, res) => {
 
     res.status(201).json({ order, checkoutUrl: payment.checkoutUrl });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Payment creation failed";
+
+    await prisma.orderPayment.update({
+      where: { id: created.payments[0].id },
+      data: { status: "FAILED", verificationMessage: message, rowUpdatedUser: "pay-panda-create" },
+    });
     await prisma.order.update({
       where: { id: created.id },
       data: {
         status: "PAYMENT_ERROR",
         paymentStatus: "FAILED",
-        verificationMessage: error instanceof Error ? error.message : "Payment creation failed",
+        verificationMessage: message,
         rowUpdatedUser: "pay-panda-create",
       },
     });
 
     res.status(502).json({
       error: "Could not create Pay-Panda checkout",
-      message: error instanceof Error ? error.message : "Payment creation failed",
+      message,
       orderId: created.id,
     });
   }
