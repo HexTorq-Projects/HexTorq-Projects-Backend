@@ -16,6 +16,7 @@ const checkoutSchema = z.object({
   customerName: z.string().min(1).max(120).optional(),
   customerEmail: z.string().email().optional(),
   customerMobile: z.string().max(30).optional(),
+  referralCode: z.string().max(30).optional(),
 });
 
 function makeOrderNumber() {
@@ -136,6 +137,7 @@ router.post("/checkout", async (req, res) => {
       customerName,
       customerEmail,
       customerMobile: customerMobile ?? null,
+      referralCode: parsed.data.referralCode || null,
       rowCreatedUser: userId,
       rowUpdatedUser: userId,
       items: {

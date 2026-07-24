@@ -37,6 +37,33 @@ export async function findOrderPaymentToVerify(opts: { paymentId?: string | null
   return null;
 }
 
+async function claimReferral(order: { id: string; referralCode: string | null; customerName: string; customerEmail: string }, orderItems: { projectTitleSnapshot: string }[]) {
+  if (!order.referralCode || !order.customerEmail) return;
+
+  const referralCode = await prisma.referralCode.findUnique({ where: { code: order.referralCode } });
+  if (!referralCode) return;
+
+  const projectTitle = orderItems.map((i) => i.projectTitleSnapshot).join(", ") || "Project";
+
+  const existing = await prisma.referralEarning.findFirst({
+    where: { referralCodeId: referralCode.id, referredEmail: order.customerEmail },
+  });
+  if (existing) return;
+
+  await prisma.referralEarning.create({
+    data: {
+      referralCodeId: referralCode.id,
+      referredName: order.customerName || order.customerEmail,
+      referredEmail: order.customerEmail,
+      projectTitle,
+      amount: 100,
+      status: "PENDING",
+      rowCreatedUser: "referral-system",
+      rowUpdatedUser: "referral-system",
+    },
+  });
+}
+
 /**
  * Applies a Pay-Panda verification result to a single OrderPayment attempt,
  * then rolls the parent Order's amountPaid/balanceDue/status up from all its
@@ -109,6 +136,11 @@ export async function updateOrderFromVerification(orderPaymentId: string, result
   // only email on a real status transition, not on repeat verify calls that change nothing
   if (newStatus !== previousPaymentStatus) {
     void sendPaymentResultEmail(updatedOrder, orderPayment.purpose as "FULL" | "ADVANCE" | "BALANCE", newStatus);
+  }
+
+  // claim referral when payment just succeeded for the first time
+  if (newStatus === "SUCCESS" && !wasAlreadySuccess && order.referralCode) {
+    void claimReferral(updatedOrder, updatedOrder.items);
   }
 
   return updatedOrder;

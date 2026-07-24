@@ -270,6 +270,7 @@ model Order {
   expiresAt          DateTime? @map("expires_at")
   verificationCode   String?   @map("verification_code")
   verificationMessage String?  @map("verification_message")
+  referralCode         String?   @map("referral_code")
 
   items              OrderItem[]
   payments           OrderPayment[]
