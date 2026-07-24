@@ -25,7 +25,7 @@ function buildActiveOfferInfo(offer: Awaited<ReturnType<typeof getActiveOffers>>
 }
 
 const router = Router();
-const PER_PAGE = 20;
+const PER_PAGE = 24;
 
 // GET /projects  (existing params preserved + new optional filters)
 //   category, subCategory, applicationArea, tier, complexity,
