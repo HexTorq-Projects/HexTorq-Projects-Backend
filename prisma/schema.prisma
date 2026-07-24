@@ -118,6 +118,8 @@ model User {
   name              String
   phone             String?
 
+  referralCode      ReferralCode?
+
   enquiries      Enquiry[]
   wishlist       Wishlist[]
   orders         Order[]
@@ -129,6 +131,44 @@ model User {
   rowUpdatedTime DateTime @updatedAt @map("row_updated_time")
 
   @@map("user")
+}
+
+// ---------- REFERRAL CODE ----------
+model ReferralCode {
+  id        String   @id @default(uuid()) @map("referral_code_id")
+  code      String   @unique @map("code")
+  userId    String   @unique @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  earnings  ReferralEarning[]
+
+  rowCreatedUser String   @default("system") @map("row_created_user")
+  rowCreatedTime DateTime @default(now()) @map("row_created_time")
+  rowUpdatedUser String   @default("system") @map("row_updated_user")
+  rowUpdatedTime DateTime @updatedAt @map("row_updated_time")
+
+  @@map("referral_code")
+}
+
+// ---------- REFERRAL EARNING ----------
+model ReferralEarning {
+  id          String   @id @default(uuid()) @map("referral_earning_id")
+  referralCodeId String @map("referral_code_id")
+  referralCode   ReferralCode @relation(fields: [referralCodeId], references: [id], onDelete: Cascade)
+
+  referredName String   @map("referred_name")
+  referredEmail String  @map("referred_email")
+  projectTitle  String  @map("project_title")
+  amount       Int      @default(200)
+  status       String   @default("PENDING") @map("status")
+
+  rowCreatedUser String   @default("system") @map("row_created_user")
+  rowCreatedTime DateTime @default(now()) @map("row_created_time")
+  rowUpdatedUser String   @default("system") @map("row_updated_user")
+  rowUpdatedTime DateTime @updatedAt @map("row_updated_time")
+
+  @@index([referralCodeId])
+  @@map("referral_earning")
 }
 
 // ---------- ENQUIRY (lead capture; forward-compatible with a future Order) ----------
@@ -205,7 +245,7 @@ model Order {
   id                 String    @id @default(uuid()) @map("order_id")
   orderNumber        String    @unique @map("order_number")
 
-  userId             String    @map("user_id")
+  userId    String   @unique @map("user_id")
   user               User      @relation(fields: [userId], references: [id])
 
   status             String    @default("PENDING") @map("status")
