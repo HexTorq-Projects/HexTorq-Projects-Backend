@@ -108,7 +108,7 @@ router.post("/claim", optionalAuth, async (req, res) => {
       referredName: referredName || referredEmail,
       referredEmail,
       projectTitle,
-      amount: 200,
+      amount: 100,
       status: "PENDING",
       rowCreatedUser: "referral-system",
       rowUpdatedUser: "referral-system",
