@@ -10,6 +10,7 @@ import enquiries from "./enquiries";
 import wishlist from "./wishlist";
 import offers from "./offers";
 import stats from "./stats";
+import referrals from "./referrals";
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use("/enquiries", enquiries);
 router.use("/wishlist", wishlist);
 router.use("/offers", offers);
 router.use("/stats", stats);
+router.use("/referrals", referrals);
 
 export default router;
