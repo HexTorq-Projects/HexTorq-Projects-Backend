@@ -171,6 +171,31 @@ router.get("/me", requireAuth, async (req, res) => {
   res.json(user);
 });
 
+const updateProfileSchema = z.object({
+  name: z.string().min(1).max(120).optional(),
+  phone: z.string().max(30).optional().nullable(),
+});
+
+// PUT /auth/profile
+router.put("/profile", requireAuth, async (req, res) => {
+  const userId = (req as AuthedRequest).userId!;
+  const parsed = updateProfileSchema.safeParse(req.body);
+  if (!parsed.success)
+    return res.status(400).json({ error: "Validation failed", details: parsed.error.issues });
+
+  const { name, phone } = parsed.data;
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      ...(name ? { name } : {}),
+      ...(phone !== undefined ? { phone: phone ?? null } : {}),
+      rowUpdatedUser: "self-update",
+    },
+  });
+
+  res.json(publicUser(user));
+});
+
 // POST /auth/forgot-password
 router.post("/forgot-password", async (req, res) => {
   const parsed = forgotPasswordSchema.safeParse(req.body);
