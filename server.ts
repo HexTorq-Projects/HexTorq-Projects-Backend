@@ -1,6 +1,14 @@
 import "dotenv/config";
+import dns from "dns";
 import express from "express";
 import cors from "cors";
+
+// Many VPS providers assign an IPv6 address that isn't actually routed. Node's
+// fetch() then tries the IPv6 address first (from DNS), hangs/fails, and
+// surfaces as a bare "fetch failed" with no useful detail — this bit us
+// calling out to Pay-Panda's API, which is hosted on this same VPS behind
+// Cloudflare (so it resolves to both A and AAAA records). Prefer IPv4.
+dns.setDefaultResultOrder("ipv4first");
 
 import categories from "./routes/categories";
 import projects from "./routes/projects";

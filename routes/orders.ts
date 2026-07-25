@@ -29,6 +29,14 @@ function parseDate(value: unknown) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+/** node's fetch() wraps network failures in a generic "fetch failed" — surface the real cause (e.g. ENETUNREACH) instead. */
+function describeError(error: unknown): string {
+  if (!(error instanceof Error)) return "Unknown error";
+  const cause = (error as Error & { cause?: unknown }).cause;
+  if (cause instanceof Error) return `${error.message}: ${cause.message}`;
+  return error.message;
+}
+
 const EXPIRES_IN_MINUTES = () => Number(process.env.PAY_PANDA_EXPIRES_IN_MINUTES || 30);
 
 router.get("/", async (req, res) => {
@@ -166,7 +174,7 @@ router.post("/checkout", async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       error: "Could not create order",
-      message: error instanceof Error ? error.message : "Order creation failed",
+      message: describeError(error) || "Order creation failed",
     });
   }
 
@@ -209,7 +217,7 @@ router.post("/checkout", async (req, res) => {
 
     res.status(201).json({ order, checkoutUrl: payment.checkoutUrl });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Payment creation failed";
+    const message = describeError(error) || "Payment creation failed";
 
     await prisma.orderPayment.update({
       where: { id: created.payments[0].id },
@@ -307,14 +315,14 @@ router.post("/:id/pay-balance", async (req, res) => {
       where: { id: orderPayment.id },
       data: {
         status: "FAILED",
-        verificationMessage: error instanceof Error ? error.message : "Payment creation failed",
+        verificationMessage: describeError(error) || "Payment creation failed",
         rowUpdatedUser: "pay-panda-create",
       },
     });
 
     res.status(502).json({
       error: "Could not create Pay-Panda checkout for the balance",
-      message: error instanceof Error ? error.message : "Payment creation failed",
+      message: describeError(error) || "Payment creation failed",
     });
   }
 });
@@ -342,7 +350,7 @@ router.post("/:id/verify", async (req, res) => {
   } catch (error) {
     res.status(502).json({
       error: "Could not verify Pay-Panda payment",
-      message: error instanceof Error ? error.message : "Payment verification failed",
+      message: describeError(error) || "Payment verification failed",
     });
   }
 });
@@ -386,7 +394,7 @@ router.post("/verify-redirect", async (req, res) => {
   } catch (error) {
     res.status(502).json({
       error: "Could not verify Pay-Panda payment",
-      message: error instanceof Error ? error.message : "Payment verification failed",
+      message: describeError(error) || "Payment verification failed",
     });
   }
 });
