@@ -267,7 +267,7 @@ model Order {
   id                 String    @id @default(uuid()) @map("order_id")
   orderNumber        String    @unique @map("order_number")
 
-  userId    String   @unique @map("user_id")
+  userId             String    @map("user_id")
   user               User      @relation(fields: [userId], references: [id])
 
   status             String    @default("PENDING") @map("status")

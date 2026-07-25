@@ -124,43 +124,51 @@ router.post("/checkout", async (req, res) => {
   const externalOrderId = paymentType === "ADVANCE" ? `${orderNumber}-ADV` : orderNumber;
   const purpose = paymentType === "ADVANCE" ? "ADVANCE" : "FULL";
 
-  const created = await prisma.order.create({
-    data: {
-      orderNumber,
-      userId,
-      status: "PENDING",
-      paymentStatus: "PENDING",
-      totalAmount,
-      paymentType,
-      amountPaid: 0,
-      balanceDue: totalAmount,
-      customerName,
-      customerEmail,
-      customerMobile: customerMobile ?? null,
-      referralCode: parsed.data.referralCode || null,
-      rowCreatedUser: userId,
-      rowUpdatedUser: userId,
-      items: {
-        create: pricedProjects.map((project) => ({
-          projectId: project.id,
-          projectTitleSnapshot: project.projectTitle,
-          unitPrice: project.unitPrice,
-          rowCreatedUser: userId,
-          rowUpdatedUser: userId,
-        })),
-      },
-      payments: {
-        create: {
-          purpose,
-          amount: paymentAmount,
-          externalOrderId,
-          rowCreatedUser: userId,
-          rowUpdatedUser: userId,
+  let created;
+  try {
+    created = await prisma.order.create({
+      data: {
+        orderNumber,
+        userId,
+        status: "PENDING",
+        paymentStatus: "PENDING",
+        totalAmount,
+        paymentType,
+        amountPaid: 0,
+        balanceDue: totalAmount,
+        customerName,
+        customerEmail,
+        customerMobile: customerMobile ?? null,
+        referralCode: parsed.data.referralCode || null,
+        rowCreatedUser: userId,
+        rowUpdatedUser: userId,
+        items: {
+          create: pricedProjects.map((project) => ({
+            projectId: project.id,
+            projectTitleSnapshot: project.projectTitle,
+            unitPrice: project.unitPrice,
+            rowCreatedUser: userId,
+            rowUpdatedUser: userId,
+          })),
+        },
+        payments: {
+          create: {
+            purpose,
+            amount: paymentAmount,
+            externalOrderId,
+            rowCreatedUser: userId,
+            rowUpdatedUser: userId,
+          },
         },
       },
-    },
-    include: orderInclude,
-  });
+      include: orderInclude,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: "Could not create order",
+      message: error instanceof Error ? error.message : "Order creation failed",
+    });
+  }
 
   try {
     const payPanda = await getPayPandaClient();
