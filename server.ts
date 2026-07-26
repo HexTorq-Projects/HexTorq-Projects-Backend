@@ -24,24 +24,11 @@ import admin from "./routes/admin";
 
 const app = express();
 
-// CORS: comma-separated allow-list from env; if the list contains "*", allow all origins.
-const cleanOrigin = (origin: string) => origin.trim().replace(/^['"]|['"]$/g, "");
-const allowedOrigins = (process.env.CORS_ORIGIN ?? "*")
-  .split(",")
-  .map(cleanOrigin)
-  .filter(Boolean);
-const allowAllOrigins = allowedOrigins.includes("*");
-
+// CORS: allow every origin, hardcoded (not env-dependent — a misconfigured or
+// missing CORS_ORIGIN kept blocking legitimate frontend domains in production).
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (allowAllOrigins || !origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-        return;
-      }
-
-      callback(new Error(`CORS origin not allowed: ${origin}`));
-    },
+    origin: true,
     credentials: true,
   })
 );

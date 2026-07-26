@@ -140,16 +140,18 @@ router.post("/claim", optionalAuth, async (req, res) => {
 // GET /referrals/balance — get the user's withdrawable balance
 router.get("/balance", requireAuth, async (req, res) => {
   const userId = (req as AuthedRequest).userId!;
-  const referralCode = await prisma.referralCode.findUnique({
-    where: { userId },
-    include: {
-      earnings: { where: { status: "CONFIRMED" } },
-      withdrawals: { where: { status: { in: ["PENDING", "APPROVED"] } } },
-    },
-  });
+  const [referralCode, withdrawals] = await Promise.all([
+    prisma.referralCode.findUnique({
+      where: { userId },
+      include: { earnings: { where: { status: "CONFIRMED" } } },
+    }),
+    prisma.referralWithdrawal.findMany({
+      where: { userId, status: { in: ["PENDING", "APPROVED"] } },
+    }),
+  ]);
 
   const earned = referralCode?.earnings.reduce((s, e) => s + e.amount, 0) || 0;
-  const withdrawn = referralCode?.withdrawals.reduce((s, w) => s + w.amount, 0) || 0;
+  const withdrawn = withdrawals.reduce((s, w) => s + w.amount, 0);
 
   res.json({ availableBalance: earned - withdrawn, totalEarned: earned, totalWithdrawn: withdrawn });
 });
@@ -166,16 +168,18 @@ router.post("/withdraw", requireAuth, async (req, res) => {
     return res.status(400).json({ error: "UPI ID and UPI holder name are required" });
   }
 
-  const referralCode = await prisma.referralCode.findUnique({
-    where: { userId },
-    include: {
-      earnings: { where: { status: "CONFIRMED" } },
-      withdrawals: { where: { status: { in: ["PENDING", "APPROVED"] } } },
-    },
-  });
+  const [referralCode, existingWithdrawals] = await Promise.all([
+    prisma.referralCode.findUnique({
+      where: { userId },
+      include: { earnings: { where: { status: "CONFIRMED" } } },
+    }),
+    prisma.referralWithdrawal.findMany({
+      where: { userId, status: { in: ["PENDING", "APPROVED"] } },
+    }),
+  ]);
 
   const earned = referralCode?.earnings.reduce((s, e) => s + e.amount, 0) || 0;
-  const withdrawn = referralCode?.withdrawals.reduce((s, w) => s + w.amount, 0) || 0;
+  const withdrawn = existingWithdrawals.reduce((s, w) => s + w.amount, 0);
   const available = earned - withdrawn;
 
   if (amount > available) {
