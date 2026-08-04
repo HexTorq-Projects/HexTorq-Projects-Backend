@@ -9,19 +9,31 @@ router.use(requireAdmin);
 const PER_PAGE = 20;
 
 const projectSchema = z.object({
-  projectTitle: z.string().min(1).max(300),
-  brief: z.string().min(1),
-  detailed: z.string().min(1),
-  importanceScore: z.number().int(),
-  scoreBand: z.string().min(1).max(60),
+  projectTitle: z.string().min(1, "Title is required").max(300),
+  brief: z.string().optional().default(""),
+  detailed: z.string().optional().default(""),
+  importanceScore: z
+    .union([z.number(), z.string()])
+    .optional()
+    .transform((val) => (val !== undefined && val !== null && !isNaN(Number(val)) ? Math.round(Number(val)) : 50)),
+  scoreBand: z.string().optional().default("Medium"),
   sellabilityTier: z.string().max(60).nullable().optional(),
   complexity: z.string().max(60).nullable().optional(),
-  recommendedPrice: z.number().int().nullable().optional(),
-  discountedPrice: z.number().int().nullable().optional(),
-  originalPrice: z.number().int().nullable().optional(),
+  recommendedPrice: z
+    .union([z.number(), z.string(), z.null()])
+    .optional()
+    .transform((val) => (val !== undefined && val !== null && val !== "" && !isNaN(Number(val)) ? Math.round(Number(val)) : null)),
+  discountedPrice: z
+    .union([z.number(), z.string(), z.null()])
+    .optional()
+    .transform((val) => (val !== undefined && val !== null && val !== "" && !isNaN(Number(val)) ? Math.round(Number(val)) : null)),
+  originalPrice: z
+    .union([z.number(), z.string(), z.null()])
+    .optional()
+    .transform((val) => (val !== undefined && val !== null && val !== "" && !isNaN(Number(val)) ? Math.round(Number(val)) : null)),
   suggestedTech: z.string().nullable().optional(),
   suggestedModules: z.string().nullable().optional(),
-  categoryId: z.string().uuid(),
+  categoryId: z.string().uuid("Please select a valid Category"),
   subCategoryId: z.string().uuid().nullable().optional(),
   applicationAreaId: z.string().uuid().nullable().optional(),
 });
@@ -72,8 +84,20 @@ router.post("/", async (req, res) => {
   if (!parsed.success)
     return res.status(400).json({ error: "Validation failed", details: parsed.error.issues });
 
+  const data = parsed.data;
+  const brief = data.brief.trim() || data.projectTitle;
+  const detailed = data.detailed.trim() || brief;
+  const scoreBand = data.scoreBand.trim() || "Medium";
+
   const project = await prisma.project.create({
-    data: { ...parsed.data, rowCreatedUser: "admin", rowUpdatedUser: "admin" },
+    data: {
+      ...data,
+      brief,
+      detailed,
+      scoreBand,
+      rowCreatedUser: "admin",
+      rowUpdatedUser: "admin",
+    },
     include: projectInclude,
   });
   res.status(201).json(project);
