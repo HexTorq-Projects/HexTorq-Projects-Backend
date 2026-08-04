@@ -137,9 +137,46 @@ router.post("/claim", optionalAuth, async (req, res) => {
   });
 });
 
-// GET /referrals/balance — get the user's withdrawable balance
-router.get("/balance", requireAuth, async (req, res) => {
+// GET /referrals/referred-users — people who signed up using my referral code
+router.get("/referred-users", requireAuth, async (req, res) => {
   const userId = (req as AuthedRequest).userId!;
+  const referralCode = await prisma.referralCode.findUnique({ where: { userId } });
+  if (!referralCode) return res.json({ users: [] });
+
+  const referredUsers = await prisma.user.findMany({
+    where: { referredByCode: referralCode.code },
+    orderBy: { rowCreatedTime: "desc" },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      rowCreatedTime: true,
+    },
+  });
+
+  // did any of them actually buy? (earning exists for their email under my code)
+  const earningEmails = new Set(
+    (
+      await prisma.referralEarning.findMany({
+        where: { referralCodeId: referralCode.id },
+        select: { referredEmail: true },
+      })
+    ).map((e) => e.referredEmail.toLowerCase())
+  );
+
+  res.json({
+    users: referredUsers.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      signedUpAt: u.rowCreatedTime,
+      purchased: earningEmails.has(u.email.toLowerCase()),
+    })),
+  });
+});
+
+// GET /referrals/balance — get the user's withdrawable balance
+router.get("/balance", requireAuth, async (req, res) => {  const userId = (req as AuthedRequest).userId!;
   const [referralCode, withdrawals] = await Promise.all([
     prisma.referralCode.findUnique({
       where: { userId },

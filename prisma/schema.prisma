@@ -118,6 +118,8 @@ model User {
   name              String
   phone             String?
 
+  referredByCode    String?  @map("referred_by_code")
+
   referralCode      ReferralCode?
   withdrawals       ReferralWithdrawal[]
 

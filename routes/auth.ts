@@ -21,6 +21,7 @@ const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6).max(200),
   phone: z.string().max(30).optional(),
+  referralCode: z.string().min(1).max(30).optional(),
 });
 
 const loginSchema = z.object({
@@ -30,6 +31,7 @@ const loginSchema = z.object({
 
 const googleSchema = z.object({
   credential: z.string().min(1),
+  referralCode: z.string().min(1).max(30).optional(),
 });
 
 const forgotPasswordSchema = z.object({
@@ -54,9 +56,16 @@ router.post("/register", async (req, res) => {
   if (!parsed.success)
     return res.status(400).json({ error: "Validation failed", details: parsed.error.issues });
 
-  const { name, email, password, phone } = parsed.data;
+  const { name, email, password, phone, referralCode } = parsed.data;
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return res.status(409).json({ error: "Email already registered" });
+
+  // only attribute the signup if the referral code actually exists
+  let referredByCode: string | null = null;
+  if (referralCode) {
+    const codeExists = await prisma.referralCode.findUnique({ where: { code: referralCode } });
+    if (codeExists) referredByCode = referralCode;
+  }
 
   const passwordHash = await hashPassword(password);
   const user = await prisma.user.create({
@@ -65,6 +74,7 @@ router.post("/register", async (req, res) => {
       email,
       phone: phone ?? null,
       passwordHash,
+      referredByCode,
       rowCreatedUser: "self-register",
       rowUpdatedUser: "self-register",
     },
@@ -124,6 +134,14 @@ router.post("/google", async (req, res) => {
   }
 
   const { sub: googleId, email, name } = payload;
+  const { referralCode } = parsed.data;
+
+  // only attribute the signup if the referral code actually exists
+  let referredByCode: string | null = null;
+  if (referralCode) {
+    const codeExists = await prisma.referralCode.findUnique({ where: { code: referralCode } });
+    if (codeExists) referredByCode = referralCode;
+  }
 
   let user = await prisma.user.findUnique({ where: { googleId } });
   let isNewUser = false;
@@ -141,6 +159,7 @@ router.post("/google", async (req, res) => {
           email,
           name: name ?? email,
           googleId,
+          referredByCode,
           rowCreatedUser: "google-signup",
           rowUpdatedUser: "google-signup",
         },
